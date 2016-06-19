@@ -9,9 +9,10 @@ active [N] proctype Switcher() {
 	int i = 0;
 	int count = 0;
 	int temp = count + 1;
+	int gotI=0, gotJ=0;
 
 	do
-		:: (((flagWrite[i] == true) || (flagWrite[j] == true)) || (i==j)) -> select (i: 0 .. N)
+		:: (i==j) -> select (i: 0 .. N)
 					do 
 						:: (i == N)  ->
 							select (i: 0 .. N)
@@ -25,10 +26,28 @@ active [N] proctype Switcher() {
 
 
 
-		:: else ->	flagWrite[i] = true;
-					flagWrite[j] = true;
+		:: else ->
 					break
 	od
+	do
+		::gotI==0
+			Atomic{
+				if(flagWrite[i]==false)
+					flagWrite[i]=true
+					gotI=1
+				fi
+			}
+	od;
+	do
+		::gotJ=0
+			Atomic{
+				if(flagWrite[j]==false)
+					flagWrite[j]=true
+					gotJ=1
+				fi
+			}
+	od;
+
 	int swap;
 
 CS: swap = A[j];
