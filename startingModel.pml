@@ -5,6 +5,9 @@ int A[N];
 active [N] proctype Switcher() {
 	int j;
 	int i;
+	int count = 0;
+	int temp = count + 1;
+
 	select (i: 0 .. N)
 	do 
 		:: (i == N)  ->
@@ -20,6 +23,20 @@ active [N] proctype Switcher() {
 	swap = A[j];
 	A[j] = A[i];
 	A[i] = swap;
+
+	/* Check for duplicates */
+	do
+		:: count < N ->
+			do
+				:: temp != count && temp < n ->
+					assert{A[temp] != A[count]}
+					temp++;
+				:: temp == count && temp < n ->
+					temp++;
+				::else ->
+					break;
+			od
+	od
 }
 
 init {
