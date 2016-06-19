@@ -1,42 +1,41 @@
 #define N 5
+//This flag is just for write premissions
+bool flagWrite[N];
 
 int A[N];
 
 active [N] proctype Switcher() {
-	int j;
-	int i;
+	int j = 0;
+	int i = 0;
 	int count = 0;
 	int temp = count + 1;
 
-	select (i: 0 .. N)
-	do 
-		:: (i == N)  ->
-			select (i: 0 .. N)
-		:: else -> break
-	od;
-	do 
-		:: ((j == i) || (j == N))  ->
-			select (j: 0 .. N)
-		:: else -> break
-	od;
+	do
+		:: (((flagWrite[i] == true) || (flagWrite[j] == true)) || (i==j)) -> select (i: 0 .. N)
+					do 
+						:: (i == N)  ->
+							select (i: 0 .. N)
+						:: else -> break
+					od;
+					do 
+						:: ((j == i) || (j == N))  ->
+							select (j: 0 .. N)
+						:: else -> break
+					od;
+
+
+
+		:: else ->	flagWrite[i] = true;
+					flagWrite[j] = true;
+					break
+	od
 	int swap;
-	swap = A[j];
+
+CS: swap = A[j];
 	A[j] = A[i];
 	A[i] = swap;
-
-	/* Check for duplicates */
-	do
-		:: count < N ->
-			do
-				:: temp != count && temp < n ->
-					assert{A[temp] != A[count]}
-					temp++;
-				:: temp == count && temp < n ->
-					temp++;
-				::else ->
-					break;
-			od
-	od
+	flagWrite[i] = false;
+	flagWrite[j] = false;
 }
 
 init {
