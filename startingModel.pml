@@ -1,4 +1,9 @@
 #define N 5
+
+#define NoDuplication (dup_finder == 0)
+ltl dup { [] <> NoDuplication }
+
+
 //This flag is just for write premissions
 bool flagWrite[N];
 bool pids[N];
@@ -6,9 +11,6 @@ bool pids[N];
 
 //for duplication finding
 int dup_finder;
-
-#define NoDuplication (dup_finder == 0)
-ltl dup { [] <> NoDuplication }
 
 
 int A[N];
@@ -52,7 +54,6 @@ CS: swap = A[j];
 }
 
 init {
-	duplicate = false;
 	A[0] = 0; 
 	A[1] = 1;
 	A[2] = 2;
@@ -80,12 +81,10 @@ init {
 				:: else -> break;
 			od;
 			if
-			:: (dup_finder > 1) -> 
-						duplicate = true;
-						break
+			:: (dup_finder >= 1) -> 	break
 			fi;
 			j++;
-		:: (duplicate == true) -> break;
+		:: (dup_finder >= 1) -> break;
 		:: else -> break;
 	od;
 
