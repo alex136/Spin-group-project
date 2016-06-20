@@ -1,18 +1,30 @@
 #define N 5
 //This flag is just for write premissions
 bool flagWrite[N];
+bool pids[N];
+
+
+//for duplication finding
+int dup_finder;
+
+#define NoDuplication (dup_finder == 0)
+ltl dup { [] <> NoDuplication }
+
 
 int A[N];
+
+
+
 
 active [N] proctype Switcher() {
 	int j = 0;
 	int i = 0;
 	int count = 0;
 	int temp = count + 1;
-	int gotI=0, gotJ=0;
+
 
 	do
-		:: (i==j) -> select (i: 0 .. N)
+		:: (((flagWrite[i] == true) || (flagWrite[j] == true)) || (i==j)) -> select (i: 0 .. N)
 					do 
 						:: (i == N)  ->
 							select (i: 0 .. N)
@@ -26,28 +38,10 @@ active [N] proctype Switcher() {
 
 
 
-		:: else ->
+		:: else ->	flagWrite[i] = true;
+					flagWrite[j] = true;
 					break
 	od
-	do
-		::gotI==0
-			Atomic{
-				if(flagWrite[i]==false)
-					flagWrite[i]=true
-					gotI=1
-				fi
-			}
-	od;
-	do
-		::gotJ=0
-			Atomic{
-				if(flagWrite[j]==false)
-					flagWrite[j]=true
-					gotJ=1
-				fi
-			}
-	od;
-
 	int swap;
 
 CS: swap = A[j];
@@ -58,6 +52,7 @@ CS: swap = A[j];
 }
 
 init {
+	duplicate = false;
 	A[0] = 0; 
 	A[1] = 1;
 	A[2] = 2;
@@ -69,4 +64,31 @@ init {
 	A[8] = 8;
 	A[9] = 9;*/
 	run Switcher();
+
+	int j = 0;
+	int i;
+	do
+		:: (j < N) -> 		
+			i = j + 1;
+			dup_finder = 0;
+			do
+				:: (i < N) -> 
+						if
+							:: A[i] == A[j] -> dup_finder++;
+						fi;
+						i++;
+				:: else -> break;
+			od;
+			if
+			:: (dup_finder > 1) -> 
+						duplicate = true;
+						break
+			fi;
+			j++;
+		:: (duplicate == true) -> break;
+		:: else -> break;
+	od;
+
 }
+
+
