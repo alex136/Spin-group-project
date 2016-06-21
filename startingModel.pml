@@ -1,73 +1,89 @@
-#define N 5
+#define N 3
 
 #define NoDuplication (dup_finder == 0)
-ltl dup { [] <> NoDuplication }
 
 
-//This flag is just for write premissions
-bool flagWrite[N];
+// willingness to go to CS
 bool pids[N];
-
 
 //for duplication finding
 int dup_finder;
 
 
 int A[N];
+int pidNum[N];
 
+bool start = false;
+int swapNumber = 0;
 
 
 
 active [N] proctype Switcher() {
 	int j = 0;
-	int i = 0;
-	int count = 0;
-	int temp = count + 1;
+	int currentPid = _pid;
+	int i = currentPid;
+	pids[currentPid] = false;
+	
 
+do
+	:: start == false -> skip;
+	:: else -> break;
+od
 
-	do
-		:: (((flagWrite[i] == true) || (flagWrite[j] == true)) || (i==j)) -> select (i: 0 .. N)
+// wait loop
+TRY: do
+		::  (pids[currentPid] == false) -> 
+					select (j: 0 .. N);
+					if
+						:: pids[pidNum[i]] == false -> pidNum[i] = currentPid;
+					fi;
 					do 
-						:: (i == N)  ->
-							select (i: 0 .. N)
-						:: else -> break
+						:: ((j == i) || (j == N)) -> select (j: 0 .. N);
+						:: else -> break;
 					od;
-					do 
-						:: ((j == i) || (j == N))  ->
-							select (j: 0 .. N)
-						:: else -> break
-					od;
-
-
-
-		:: else ->	flagWrite[i] = true;
-					flagWrite[j] = true;
-					break
-	od
+					if
+						:: pids[pidNum[j]] == false -> pidNum[j] = currentPid;
+					fi;
+					if
+						:: ((pidNum[i] == currentPid) && (pidNum[j] == currentPid)) -> pids[currentPid] = true;
+					fi;
+		:: (pids[currentPid] == true) && ( pidNum[i] == currentPid) && (pidNum[j] == currentPid) -> break;
+		:: ( pidNum[i] != currentPid) || (pidNum[j] != currentPid) -> pids[currentPid] = false;
+	od;
 	int swap;
 
 CS: swap = A[j];
 	A[j] = A[i];
 	A[i] = swap;
-	flagWrite[i] = false;
-	flagWrite[j] = false;
+	pids[currentPid] = false;
+	swapNumber++;
 }
 
+ltl dup { [] <> NoDuplication }
+
 init {
-	A[0] = 0; 
-	A[1] = 1;
-	A[2] = 2;
-	A[3] = 3;
-	A[4] = 4;
-	/*A[5] = 5;
-	A[6] = 6;
-	A[7] = 7;
-	A[8] = 8;
-	A[9] = 9;*/
-	run Switcher();
 
 	int j = 0;
-	int i;
+	int i = 0;
+
+	do
+		:: i < N ->    
+			A[i] = i;
+			pidNum[i] = i;	
+			i++;
+		:: i >= N -> 
+			start = true;
+			break;
+	od;
+
+
+	//run Switcher();
+
+	do
+		:: swapNumber < N -> skip;
+		:: else -> break;
+	od
+
 	do
 		:: (j < N) -> 		
 			i = j + 1;
@@ -89,5 +105,3 @@ init {
 	od;
 
 }
-
-
