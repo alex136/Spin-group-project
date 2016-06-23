@@ -1,6 +1,7 @@
-#define N 3
+#define N 4
 
 #define NoDuplication (dup_finder == 0)
+#define EnoughSwap (swapNumber < N)
 
 
 // willingness to go to CS
@@ -34,24 +35,24 @@ od
 TRY: do
 		::  (pids[currentPid] == false) -> 
 					select (j: 0 .. N);
-					if
+					atomic {if
 						:: pids[pidNum[i]] == false -> pidNum[i] = currentPid;
-					fi;
+					fi;}
 					do 
 						:: ((j == i) || (j == N)) -> select (j: 0 .. N);
 						:: else -> break;
 					od;
-					if
+					atomic {if
 						:: pids[pidNum[j]] == false -> pidNum[j] = currentPid;
-					fi;
-					if
+					fi;}
+					atomic {if
 						:: ((pidNum[i] == currentPid) && (pidNum[j] == currentPid)) -> pids[currentPid] = true;
-					fi;
+					fi;}
 		:: (pids[currentPid] == true) && ( pidNum[i] == currentPid) && (pidNum[j] == currentPid) -> break;
-		:: ( pidNum[i] != currentPid) || (pidNum[j] != currentPid) -> pids[currentPid] = false;
+		:: atomic {( pidNum[i] != currentPid) || (pidNum[j] != currentPid) -> pids[currentPid] = false;}
 	od;
-	int swap;
 
+	int swap;
 CS: swap = A[j];
 	A[j] = A[i];
 	A[i] = swap;
@@ -60,6 +61,7 @@ CS: swap = A[j];
 }
 
 ltl dup { [] <> NoDuplication }
+//ltl swapCheck { [] <> EnoughSwap }
 
 init {
 
@@ -97,7 +99,7 @@ init {
 				:: else -> break;
 			od;
 			if
-			:: (dup_finder >= 1) -> 	break
+			:: (dup_finder >= 1) -> break;
 			fi;
 			j++;
 		:: (dup_finder >= 1) -> break;
