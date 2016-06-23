@@ -1,7 +1,8 @@
 #define N 4
 
 #define NoDuplication (dup_finder == 0)
-#define EnoughSwap (swapNumber < N)
+#define EnoughSwap (swapNumber == N)
+#define Termination (np_ == 0)
 
 
 // willingness to go to CS
@@ -60,8 +61,8 @@ CS: swap = A[j];
 	swapNumber++;
 }
 
-ltl dup { [] <> NoDuplication }
-//ltl swapCheck { [] <> EnoughSwap }
+//ltl dup { [] <> NoDuplication }
+ltl swapCheck { [] (Termination -> EnoughSwap) }
 
 init {
 
