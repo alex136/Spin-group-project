@@ -19,18 +19,14 @@ bool start = false;
 int swapNumber = 0;
 
 
-
 active [N] proctype Switcher() {
 	int j = 0;
 	int currentPid = _pid;
 	int i = currentPid;
 	pids[currentPid] = false;
 	
+start == true;
 
-do
-	:: start == false -> skip;
-	:: else -> break;
-od
 
 // wait loop
 TRY: do
@@ -38,6 +34,7 @@ TRY: do
 					select (j: 0 .. N);
 					atomic {if
 						:: pids[pidNum[i]] == false -> pidNum[i] = currentPid;
+						:: else -> skip;
 					fi;}
 					do 
 						:: ((j == i) || (j == N)) -> select (j: 0 .. N);
@@ -45,9 +42,11 @@ TRY: do
 					od;
 					atomic {if
 						:: pids[pidNum[j]] == false -> pidNum[j] = currentPid;
+						:: else -> skip;
 					fi;}
 					atomic {if
 						:: ((pidNum[i] == currentPid) && (pidNum[j] == currentPid)) -> pids[currentPid] = true;
+						:: else -> skip;
 					fi;}
 		:: (pids[currentPid] == true) && ( pidNum[i] == currentPid) && (pidNum[j] == currentPid) -> break;
 		:: atomic {( pidNum[i] != currentPid) || (pidNum[j] != currentPid) -> pids[currentPid] = false;}
@@ -61,7 +60,7 @@ CS: swap = A[j];
 	swapNumber++;
 }
 
-//ltl dup { [] <> NoDuplication }
+//ltl dup { [] (Termination -> NoDuplication) }
 ltl swapCheck { [] (Termination -> EnoughSwap) }
 
 init {
@@ -79,13 +78,7 @@ init {
 			break;
 	od;
 
-
-	//run Switcher();
-
-	do
-		:: swapNumber < N -> skip;
-		:: else -> break;
-	od
+	swapNumber == N;
 
 	do
 		:: (j < N) -> 		
@@ -95,15 +88,16 @@ init {
 				:: (i < N) -> 
 						if
 							:: A[i] == A[j] -> dup_finder++;
+							:: else -> skip;
 						fi;
 						i++;
 				:: else -> break;
 			od;
 			if
-			:: (dup_finder >= 1) -> break;
+				:: (dup_finder >= 1) -> break;
+				:: else -> skip;
 			fi;
 			j++;
-		:: (dup_finder >= 1) -> break;
 		:: else -> break;
 	od;
 
